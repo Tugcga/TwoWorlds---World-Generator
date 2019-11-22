@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<location xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <items>
+    <item name="Ground">
+      <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <geometry mesh_name="generated_mesh_16950" mesh_link="meshes/mesh_15830_generated_mesh_16950" material_name="generated_material_-31696" material_link="materials/material_-31696_generated_material_-31696" />
+    </item>
+    <item name="Walls">
+      <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <geometry mesh_name="generated_mesh_16660" mesh_link="meshes/mesh_16278_generated_mesh_16660" material_name="generated_material_-31810" material_link="materials/material_-31810_generated_material_-31810" />
+    </item>
+    <item name="Tower">
+      <transform position_x="31" position_y="0" position_z="9" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <items>
+        <item name="center">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2222" mesh_link="meshes/mesh_-25736_generated_mesh_-2222" material_name="generated_material_-31884" material_link="materials/material_-31884_generated_material_-31884" />
+        </item>
+        <item name="border_small_rb">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="44.99843" rotation_z="-0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2224" mesh_link="meshes/mesh_-25852_generated_mesh_-2224" material_name="generated_material_-31958" material_link="materials/material_-31958_generated_material_-31958" />
+        </item>
+        <item name="border_small_lb">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="134.998444" rotation_z="-0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2224" mesh_link="meshes/mesh_-25852_generated_mesh_-2224" material_name="generated_material_-32032" material_link="materials/material_-32032_generated_material_-32032" />
+        </item>
+        <item name="border_small_rt">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="314.998444" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2224" mesh_link="meshes/mesh_-25852_generated_mesh_-2224" material_name="generated_material_-32106" material_link="materials/material_-32106_generated_material_-32106" />
+        </item>
+        <item name="border_small_lt">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="0" rotation_y="224.998428" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2224" mesh_link="meshes/mesh_-25852_generated_mesh_-2224" material_name="generated_material_-32180" material_link="materials/material_-32180_generated_material_-32180" />
+        </item>
+        <item name="border_big_t">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2220" mesh_link="meshes/mesh_-26192_generated_mesh_-2220" material_name="generated_material_-32254" material_link="materials/material_-32254_generated_material_-32254" />
+        </item>
+        <item name="border_big_r">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="90" rotation_z="-0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2220" mesh_link="meshes/mesh_-26192_generated_mesh_-2220" material_name="generated_material_-32328" material_link="materials/material_-32328_generated_material_-32328" />
+        </item>
+        <item name="border_big_b">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="180" rotation_z="-0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2220" mesh_link="meshes/mesh_-26192_generated_mesh_-2220" material_name="generated_material_-32402" material_link="materials/material_-32402_generated_material_-32402" />
+        </item>
+        <item name="border_big_l">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="0" rotation_y="270" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2220" mesh_link="meshes/mesh_-26192_generated_mesh_-2220" material_name="generated_material_-32476" material_link="materials/material_-32476_generated_material_-32476" />
+        </item>
+        <item name="center_detail">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2218" mesh_link="meshes/mesh_-26532_generated_mesh_-2218" material_name="generated_material_-32550" material_link="materials/material_-32550_generated_material_-32550" />
+        </item>
+      </items>
+    </item>
+  </items>
+  <transform position_x="-80" position_y="0" position_z="160" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+  <minimap name="minimap_-1_2" link="minimaps/minimap_-1_2" />
+</location>

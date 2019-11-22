@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<location xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <items>
+    <item name="Ground">
+      <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <geometry mesh_name="generated_mesh_15634" mesh_link="meshes/mesh_16888_generated_mesh_15634" material_name="generated_material_-34050" material_link="materials/material_-34050_generated_material_-34050" />
+    </item>
+    <item name="Walls">
+      <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <geometry mesh_name="generated_mesh_15558" mesh_link="meshes/mesh_16590_generated_mesh_15558" material_name="generated_material_-34164" material_link="materials/material_-34164_generated_material_-34164" />
+    </item>
+  </items>
+  <transform position_x="0" position_y="0" position_z="-80" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+  <minimap name="minimap_0_-1" link="minimaps/minimap_0_-1" />
+</location>

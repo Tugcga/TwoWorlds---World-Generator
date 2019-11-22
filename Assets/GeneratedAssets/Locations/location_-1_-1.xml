@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<location xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <items>
+    <item name="Ground">
+      <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <geometry mesh_name="generated_mesh_16862" mesh_link="meshes/mesh_15722_generated_mesh_16862" material_name="generated_material_-30060" material_link="materials/material_-30060_generated_material_-30060" />
+    </item>
+    <item name="Walls">
+      <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <geometry mesh_name="generated_mesh_16446" mesh_link="meshes/mesh_16044_generated_mesh_16446" material_name="generated_material_-30174" material_link="materials/material_-30174_generated_material_-30174" />
+    </item>
+    <item name="StartPoint">
+      <transform position_x="-0.129997253" position_y="0" position_z="-28.8000031" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <items>
+        <item name="start_point_mesh">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-2290" mesh_link="meshes/mesh_-29228_generated_mesh_-2290" material_name="generated_material_-30248" material_link="materials/material_-30248_generated_material_-30248" />
+        </item>
+      </items>
+    </item>
+  </items>
+  <transform position_x="-80" position_y="0" position_z="-80" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+  <minimap name="minimap_-1_-1" link="minimaps/minimap_-1_-1" />
+</location>
