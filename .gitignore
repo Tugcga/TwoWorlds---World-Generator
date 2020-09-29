@@ -10,3 +10,11 @@ ProjectSettings
 *.user
 *.csproj
 *.unitypackage
+*.xml
+*.xml.meta
+*.png
+*.png.meta
+*.asset
+*.asset.meta
+*.exr
+*.exr.meta
