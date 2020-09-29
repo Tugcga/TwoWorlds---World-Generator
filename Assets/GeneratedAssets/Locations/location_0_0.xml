@@ -3,11 +3,20 @@
   <items>
     <item name="Ground">
       <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
-      <geometry mesh_name="generated_mesh_16054" mesh_link="meshes/mesh_16076_generated_mesh_16054" material_name="generated_material_-34324" material_link="materials/material_-34324_generated_material_-34324" />
+      <geometry mesh_name="generated_mesh_-39906" mesh_link="meshes/mesh_-39912_generated_mesh_-39906" material_name="generated_material_-41212" material_link="materials/material_-41212_generated_material_-41212" />
     </item>
     <item name="Walls">
       <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
-      <geometry mesh_name="generated_mesh_16474" mesh_link="meshes/mesh_15696_generated_mesh_16474" material_name="generated_material_-34438" material_link="materials/material_-34438_generated_material_-34438" />
+      <geometry mesh_name="generated_mesh_-39916" mesh_link="meshes/mesh_-39922_generated_mesh_-39916" material_name="generated_material_-41320" material_link="materials/material_-41320_generated_material_-41320" />
+    </item>
+    <item name="StartPoint">
+      <transform position_x="5.1" position_y="0" position_z="-25.6" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+      <items>
+        <item name="start_point_mesh">
+          <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
+          <geometry mesh_name="generated_mesh_-39504" mesh_link="meshes/mesh_-41360_generated_mesh_-39504" material_name="generated_material_-41430" material_link="materials/material_-41430_generated_material_-41430" />
+        </item>
+      </items>
     </item>
   </items>
   <transform position_x="0" position_y="0" position_z="0" rotation_x="-0" rotation_y="0" rotation_z="0" scale_x="1" scale_y="1" scale_z="1" />
