@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace WorldGenerator
 {
-    public class WG_Position : MonoBehaviour
+    public class WG_Position : WG_PositionBase
     {
         public float visualRadius = 1.0f;
         public float visualHeight = 1.0f;
