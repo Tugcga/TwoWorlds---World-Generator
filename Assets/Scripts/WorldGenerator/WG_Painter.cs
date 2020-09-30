@@ -4,9 +4,10 @@ using UnityEngine;
 
 namespace WorldGenerator
 {
-    [System.Serializable]
+    
     public class WG_Painter : MonoBehaviour
     {
+        [SerializeField]
         public List<Disc> points = new List<Disc>();
         private int currentLevel = 0;
         public WG_TerrainBuilder wgBuilder;

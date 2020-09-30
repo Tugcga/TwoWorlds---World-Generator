@@ -176,6 +176,7 @@ namespace WorldGenerator
 
         void TryUpdateMap()
         {
+            EditorUtility.SetDirty(target);
             if (wgPainter.wgBuilder != null)
             {
                 wgPainter.wgBuilder.UpdateMap();

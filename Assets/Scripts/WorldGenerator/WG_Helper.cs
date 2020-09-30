@@ -27,6 +27,7 @@ namespace WorldGenerator
         public int value2;
     }
 
+    [System.Serializable]
     public struct Disc
     {
         public Vector2 center;
@@ -1010,7 +1011,6 @@ namespace WorldGenerator
                     IntInt currentEdge;
                     currentEdge.value01 = edgesList[boundaryIndexes[i]].GetEdgeVertices().value1;
                     currentEdge.value02 = edgesList[boundaryIndexes[i]].GetEdgeVertices().value2;
-                    //IntIntClass currentEdge = edgesList[boundaryIndexes[i]].GetEdgeVertices();
                     Vector3 currentStart = vertexList[currentEdge.value01].position;
                     Vector3 currentEnd = vertexList[currentEdge.value02].position;
                     if (Vector3.Distance(currentStart, currentEnd) < 0.01f)
@@ -1027,7 +1027,6 @@ namespace WorldGenerator
                             IntInt testEdge;
                             testEdge.value01 = edgesList[boundaryIndexes[j]].GetEdgeVertices().value1;
                             testEdge.value02 = edgesList[boundaryIndexes[j]].GetEdgeVertices().value2;
-                            //IntIntClass testEdge = edgesList[boundaryIndexes[j]].GetEdgeVertices();
                             Vector3 testStart = vertexList[testEdge.value01].position;
                             Vector3 testEnd = vertexList[testEdge.value02].position;
                             if (Vector3.Distance(testStart, testEnd) < 0.01f)
