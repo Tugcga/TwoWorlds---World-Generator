@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <global_location xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <navmesh name="navmesh_-3176" link="navmeshes/navmesh_-3176" />
-  <bounds min_u="-3" min_v="-3" max_u="3" max_v="3" />
+  <navmesh name="navmesh_-18516" link="navmeshes/navmesh_-18516" />
+  <bounds min_u="-1" min_v="0" max_u="-1" max_v="0" />
   <size value="80" />
 </global_location>
