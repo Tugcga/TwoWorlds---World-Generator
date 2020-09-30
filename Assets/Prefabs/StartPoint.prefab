@@ -66,6 +66,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -104,6 +105,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9027530562544756012}
   - component: {fileID: 6951046235689127950}
+  - component: {fileID: -2929667404110015364}
   m_Layer: 0
   m_Name: StartPoint
   m_TagString: Untagged
@@ -142,3 +144,19 @@ MonoBehaviour:
   m_Area: 0
   m_IgnoreFromBuild: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &-2929667404110015364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9027530562544756013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9204dc3dd5d2514e8c282fbd17a79fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  visualRadius: 4.21
+  visualHeight: 3
+  visualEndRadius: 3
+  color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
