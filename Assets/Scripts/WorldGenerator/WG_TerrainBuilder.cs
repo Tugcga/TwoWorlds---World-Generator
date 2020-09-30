@@ -79,34 +79,6 @@ namespace WorldGenerator
                 return true;
             }
 
-            /*bool isFindValue = false;
-            bool isFindAdditive = false;
-            bool isFindSubtractive = false;
-
-            for (int noiseIndex = 0; noiseIndex < noises.Length; noiseIndex++)
-            {
-                if (noises[noiseIndex].isActive)
-                {
-                    FloatBool height = noises[noiseIndex].GetHeight(point);
-                    if (height.boolVal)
-                    {
-                        if (height.floatVal > mountainsLimit)
-                        {
-                            isFindValue = true;
-                            if (noises[noiseIndex].additive == additiveEnum.Additive)
-                            {
-                                isFindAdditive = true;
-                            }
-                            else if(noises[noiseIndex].additive == additiveEnum.Subtractive)
-                            {
-                                isFindSubtractive = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return isFindValue && !isFindSubtractive && isFindAdditive;*/
             bool toReturn = false;
             float maxLevel = float.MinValue;
             for (int noiseIndex = 0; noiseIndex < noises.Length; noiseIndex++)
@@ -137,6 +109,23 @@ namespace WorldGenerator
         public void BuildMesh()
         {
 #if UNITY_EDITOR
+            //find all objects with tower or position tag
+            WG_PositionBase[] objs = FindObjectsOfType<WG_PositionBase>();
+            for(int i = 0; i < objs.Length; i++)
+            {
+                Transform tfm = objs[i].transform;
+                IntPair loc = WG_Helper.GetLocationCoordinates(tfm.position, segmentSize);
+                if(loc.u >= segmentsMinX && loc.u <= segmenstMaxX && loc.v >= segmentsMinY && loc.v <= segmenstMaxY)
+                {
+                    //parent to the generator root
+                    tfm.SetParent(gameObject.transform, true);
+                }
+                else
+                {//unparent object if it outside of the generated zone
+                    tfm.SetParent(null, true);
+                }
+            }
+
             //clear generated segments
             navmeshExist = false;
             //create helper object for all sub-generated objects
@@ -233,7 +222,7 @@ namespace WorldGenerator
 
                             //move object inside location
                             tfm.SetParent(loc.gameObject.transform, true);
-                            tfm.position += loc.gameObject.transform.position;
+                            tfm.position = position;
                         }
                     }
                     else

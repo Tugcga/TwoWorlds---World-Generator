@@ -182,7 +182,11 @@ namespace WorldGenerator
                     for (int i = 0; i < positions.Length; i++)
                     {
                         Vector3 pos = positions[i].gameObject.transform.position;
-                        globalLocation.positions.Add(new PositionData() { positionX = pos.x, positionY = pos.y, positionZ = pos.z });
+                        IntPair loc = WG_Helper.GetLocationCoordinates(pos, builderComponent.segmentSize);
+                        if (loc.u >= builderComponent.segmentsMinX && loc.u <= builderComponent.segmenstMaxX && loc.v >= builderComponent.segmentsMinY && loc.v <= builderComponent.segmenstMaxY)
+                        { 
+                            globalLocation.positions.Add(new PositionData() { positionX = pos.x, positionY = pos.y, positionZ = pos.z }); 
+                        }
                     }
 
                     if (globalLocation.positions.Count == 0)
@@ -210,16 +214,15 @@ namespace WorldGenerator
                 AssetImporter.GetAtPath(globalLocationAssetPath).SetAssetBundleNameAndVariant("locations/" + globalLocationName, "");
 
                 //export server data
-                SavePlayerPositions();
-                //SaveCollisionMap(data);
+                SavePlayerPositions(builderComponent);
                 SaveCollisionMap(serverPath);
-                SaveTowerPositions();
+                SaveTowerPositions(builderComponent);
             }
 #endif
 
         }
 
-        void SavePlayerPositions()
+        void SavePlayerPositions(WG_TerrainBuilder builderComponent)
         {
             NumberFormatInfo nfi = new NumberFormatInfo();
             nfi.NumberDecimalSeparator = ".";
@@ -232,12 +235,16 @@ namespace WorldGenerator
                 for (int i = 0; i < positions.Length; i++)
                 {
                     Vector3 p = positions[i].transform.position;
-                    sw.Write(p.x.ToString("0.000", nfi));
-                    sw.Write(",");
-                    sw.Write(p.z.ToString("0.000", nfi));
-                    if (i < positions.Length - 1)
+                    IntPair loc = WG_Helper.GetLocationCoordinates(p, builderComponent.segmentSize);
+                    if (loc.u >= builderComponent.segmentsMinX && loc.u <= builderComponent.segmenstMaxX && loc.v >= builderComponent.segmentsMinY && loc.v <= builderComponent.segmenstMaxY)
                     {
-                        sw.Write("|");
+                        sw.Write(p.x.ToString("0.000", nfi));
+                        sw.Write(",");
+                        sw.Write(p.z.ToString("0.000", nfi));
+                        if (i < positions.Length - 1)
+                        {
+                            sw.Write("|");
+                        }
                     }
                 }
             }
@@ -264,7 +271,7 @@ namespace WorldGenerator
             }
         }
 
-        void SaveTowerPositions()
+        void SaveTowerPositions(WG_TerrainBuilder builderComponent)
         {
             NumberFormatInfo nfi = new NumberFormatInfo();
             nfi.NumberDecimalSeparator = ".";
@@ -277,16 +284,20 @@ namespace WorldGenerator
                 for (int i = 0; i < positions.Length; i++)
                 {
                     Vector3 p = positions[i].transform.position;
-                    sw.Write(positions[i].towerType);
-                    sw.Write(",");
-                    sw.Write(p.x.ToString("0.000", nfi));
-                    sw.Write(",");
-                    sw.Write(p.z.ToString("0.000", nfi));
-                    sw.Write(",");
-                    sw.Write(positions[i].towerName);
-                    if (i < positions.Length - 1)
+                    IntPair loc = WG_Helper.GetLocationCoordinates(p, builderComponent.segmentSize);
+                    if (loc.u >= builderComponent.segmentsMinX && loc.u <= builderComponent.segmenstMaxX && loc.v >= builderComponent.segmentsMinY && loc.v <= builderComponent.segmenstMaxY)
                     {
-                        sw.Write("|");
+                        sw.Write(positions[i].towerType);
+                        sw.Write(",");
+                        sw.Write(p.x.ToString("0.000", nfi));
+                        sw.Write(",");
+                        sw.Write(p.z.ToString("0.000", nfi));
+                        sw.Write(",");
+                        sw.Write(positions[i].towerName);
+                        if (i < positions.Length - 1)
+                        {
+                            sw.Write("|");
+                        }
                     }
                 }
             }
