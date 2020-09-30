@@ -18,3 +18,4 @@ ProjectSettings
 *.asset.meta
 *.exr
 *.exr.meta
+Assets\GeneratedAssets
