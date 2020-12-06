@@ -87,13 +87,21 @@ namespace WorldGenerator
     }
 #endif
 
+    public enum LMShaderMode
+    {
+        LWRP,
+        Std
+    }
+
     public class WG_LocationsExporter : MonoBehaviour
     {
         public Transform builder;
         public Camera minimapCamera;
         public int minimapSize = 128;
         public float minimapCameraHeight = 5.0f;
-        public Shader lightMapShader;
+        public Shader lwrpShader;
+        public Shader[] stdShaders;
+        public LMShaderMode lmMode;
         public NavMeshData localNavMesh;
         public string locationRootName = "Locations";
         public string assetLocationPath = "/GeneratedAssets/Locations/";
@@ -342,7 +350,7 @@ namespace WorldGenerator
                         "Assets" + assetMaterialPath, 
                         "Assets" + assetTexturePath, 
                         "Assets" + assetMinimapPath,
-                        lightMapShader,
+                        lwrpShader, stdShaders, lmMode,
                         minimapSize, minimapCamera, minimapCameraHeight, exportLightmapHDR,
                         savedStandardMeshes, savedObjectMeshes);
                 }

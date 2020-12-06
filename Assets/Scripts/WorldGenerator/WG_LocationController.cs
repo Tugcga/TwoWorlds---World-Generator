@@ -154,7 +154,9 @@ namespace WorldGenerator
         private string materialAssetFolder;
         private string textureAssetFolder;
         private string minimapAssetFolder;
-        private Shader lmShader;
+        private Shader lwrpShader;
+        private Shader[] stdShaders;
+        private LMShaderMode lmMode;
         private bool isLightmapHDR;
 
         public void ExportLocation(string locationAssetPath, int minimapSize, Camera minimapCamera, float minimapCameraHeight, string _minimapAssetFolder)
@@ -326,7 +328,9 @@ namespace WorldGenerator
                                     string _materialAssetFolder, 
                                     string _textureAssetFolder, 
                                     string _minimapAssetFolder, 
-                                    Shader _lmShader, 
+                                    Shader _lwrpShader,
+                                    Shader[] _stdShaders,
+                                    LMShaderMode _lmMode,
                                     int minimapSize, 
                                     Camera minimapCamera, 
                                     float minimapCameraHeight, 
@@ -339,7 +343,9 @@ namespace WorldGenerator
             materialAssetFolder = _materialAssetFolder;
             textureAssetFolder = _textureAssetFolder;
             minimapAssetFolder = _minimapAssetFolder;
-            lmShader = _lmShader;
+            lwrpShader = _lwrpShader;
+            stdShaders = _stdShaders;
+            lmMode = _lmMode;
             isLightmapHDR = _isLightmapHDR;
             PrepareObject(gameObject.transform, savedStandardMeshes, savedObjectMeshes);
             CreateMinimap(minimapSize, minimapCamera, minimapCameraHeight);
@@ -365,6 +371,28 @@ namespace WorldGenerator
             #endif
         }
 
+        Shader GetStdShader(bool isDiffuse, bool isBump, bool isEmission)
+        {
+            /*
+             * the order of shaders:
+             * 0: only diffuse
+             * 1: bump and specular without diffuse
+             * 2: bump, specular, emission, no diffuse
+             */
+            if(!isDiffuse && isBump && isEmission)
+            {
+                return stdShaders[2];
+            }
+            else if(!isDiffuse && isBump && !isEmission)
+            {
+                return stdShaders[1];
+            }
+            else
+            {
+                return stdShaders[0];
+            }
+        }
+
         void PrepareMaterial(GameObject go)
         {
             //for material of the geometry we should get lightmap, save it, reassign material with all textures plus lightmap
@@ -375,7 +403,10 @@ namespace WorldGenerator
                 //get material
                 Material originalMaterial = meshRenderer.sharedMaterial;
                 //if material use lightMap texture, then does not save new texture and reassign material
-                bool lmSlotExist = IsMaterialContainsLightMap(originalMaterial);
+                bool lmSlotExist = IsMaterialContainsMap(originalMaterial, "_LightMap");
+                bool bumpSlotExist = IsMaterialContainsMap(originalMaterial, "_BumpMap");
+                bool emissionSlotExist = IsMaterialContainsMap(originalMaterial, "_EmissionMap");
+                bool diffuseSlotExist = IsMaterialContainsMap(originalMaterial, "_MainTex");
                 if (lmSlotExist)
                 {
                     Texture t = originalMaterial.GetTexture("_LightMap");
@@ -479,59 +510,68 @@ namespace WorldGenerator
                     //reassign material if we need it
                     if (reAssignMaterial)
                     {
-                        Material newMaterial = new Material(lmShader);
-                        //assign all parameters from original material to the new one
-                        Shader originalShader = originalMaterial.shader;
-                        List<string> newMaterialNames = WG_Helper.GetShaderParameterNames(lmShader);
-                        int propsCount = ShaderUtil.GetPropertyCount(originalShader);
-                        for (int i = 0; i < propsCount; i++)
+                        if (true)
                         {
-                            string propName = ShaderUtil.GetPropertyName(originalShader, i);
-                            if (newMaterialNames.Contains(propName))
+                            Material newMaterial = lmMode == LMShaderMode.LWRP ? new Material(lwrpShader) : new Material(GetStdShader(diffuseSlotExist, bumpSlotExist, emissionSlotExist));
+                            //Material newMaterial = (lmMode == LMShaderMode.LWRP || (lmMode == LMShaderMode.Std && bumpSlotExist == false)) ? new Material(lmShader) : new Material(lmSecondShader);
+                            //for LWRP we use only one uber-shader, for std shaders each different once from array
+                            //assign all parameters from original material to the new one
+                            Shader originalShader = originalMaterial.shader;
+                            List<string> newMaterialNames = WG_Helper.GetShaderParameterNames(newMaterial.shader);
+                            int propsCount = ShaderUtil.GetPropertyCount(originalShader);
+                            for (int i = 0; i < propsCount; i++)
                             {
-                                ShaderUtil.ShaderPropertyType type = ShaderUtil.GetPropertyType(originalShader, i);
-                                if (type == ShaderUtil.ShaderPropertyType.Color)
+                                string propName = ShaderUtil.GetPropertyName(originalShader, i);
+                                if (newMaterialNames.Contains(propName))
                                 {
-                                    newMaterial.SetColor(propName, originalMaterial.GetColor(propName));
+                                    ShaderUtil.ShaderPropertyType type = ShaderUtil.GetPropertyType(originalShader, i);
+                                    if (type == ShaderUtil.ShaderPropertyType.Color)
+                                    {
+                                        newMaterial.SetColor(propName, originalMaterial.GetColor(propName));
+                                    }
+                                    else if (type == ShaderUtil.ShaderPropertyType.Float)
+                                    {
+                                        newMaterial.SetFloat(propName, originalMaterial.GetFloat(propName));
+                                    }
+                                    else if (type == ShaderUtil.ShaderPropertyType.Range)
+                                    {
+                                        newMaterial.SetFloat(propName, originalMaterial.GetFloat(propName));
+                                    }
+                                    else if (type == ShaderUtil.ShaderPropertyType.TexEnv)
+                                    {
+                                        newMaterial.SetTexture(propName, originalMaterial.GetTexture(propName));
+                                        newMaterial.SetTextureOffset(propName, originalMaterial.GetTextureOffset(propName));
+                                        newMaterial.SetTextureScale(propName, originalMaterial.GetTextureScale(propName));
+                                    }
+                                    else if (type == ShaderUtil.ShaderPropertyType.Vector)
+                                    {
+                                        newMaterial.SetVector(propName, originalMaterial.GetVector(propName));
+                                    }
                                 }
-                                else if(type == ShaderUtil.ShaderPropertyType.Float)
+                                else
                                 {
-                                    newMaterial.SetFloat(propName, originalMaterial.GetFloat(propName));
-                                }
-                                else if (type == ShaderUtil.ShaderPropertyType.Range)
-                                {
-                                    newMaterial.SetFloat(propName, originalMaterial.GetFloat(propName));
-                                }
-                                else if (type == ShaderUtil.ShaderPropertyType.TexEnv)
-                                {
-                                    newMaterial.SetTexture(propName, originalMaterial.GetTexture(propName));
-                                    newMaterial.SetTextureOffset(propName, originalMaterial.GetTextureOffset(propName));
-                                    newMaterial.SetTextureScale(propName, originalMaterial.GetTextureScale(propName));
-                                }
-                                else if (type == ShaderUtil.ShaderPropertyType.Vector)
-                                {
-                                    newMaterial.SetVector(propName, originalMaterial.GetVector(propName));
+                                    Debug.Log("New material (" + newMaterial.shader.name + ") for the object " + go.name + " does not contains property " + propName + ". Skip it.");
                                 }
                             }
-                            else
+                            //set gpu instancing
+                            newMaterial.enableInstancing = originalMaterial.enableInstancing;
+                            //finally assign lightMap texture
+                            newMaterial.SetTexture("_LightMap", AssetDatabase.LoadAssetAtPath<Texture2D>(lmTextureAssetPath));
+                            //enable all kewords
+                            string[] originalKeyWords = originalMaterial.shaderKeywords;
+                            for (int s = 0; s < originalKeyWords.Length; s++)
                             {
-                                Debug.Log("New material (" + lmShader.name + ") for the object " + go.name + " does not contains property " + propName + ". Skip it.");
+                                newMaterial.EnableKeyword(originalKeyWords[s]);
                             }
+                            //CoreUtils.SetKeyword(newMaterial, "_EMISSION", originalMaterial.IsKeywordEnabled("_EMISSION"));
+                            //assign material to the object
+                            meshRenderer.sharedMaterial = newMaterial;
+                            SaveMaterialAsset(newMaterial);
                         }
-                        //set gpu instancing
-                        newMaterial.enableInstancing = originalMaterial.enableInstancing;
-                        //finally assign lightMap texture
-                        newMaterial.SetTexture("_LightMap", AssetDatabase.LoadAssetAtPath<Texture2D>(lmTextureAssetPath));
-                        //enable all kewords
-                        string[] originalKeyWords = originalMaterial.shaderKeywords;
-                        for (int s = 0; s < originalKeyWords.Length; s++)
+                        else
                         {
-                            newMaterial.EnableKeyword(originalKeyWords[s]);
+
                         }
-                        //CoreUtils.SetKeyword(newMaterial, "_EMISSION", originalMaterial.IsKeywordEnabled("_EMISSION"));
-                        //assign material to the object
-                        meshRenderer.sharedMaterial = newMaterial;
-                        SaveMaterialAsset(newMaterial);
                     }
                     else
                     {
@@ -548,11 +588,9 @@ namespace WorldGenerator
             #endif
         }
 
-        //return true if there is a slot for lightmap in the material
-        bool IsMaterialContainsLightMap(Material material)
+        bool IsMaterialContainsMap(Material material, string slotName)
         {
-            #if UNITY_EDITOR
-            string slotName = "_LightMap";
+#if UNITY_EDITOR
             if (material == null)
             {
                 return false;
@@ -567,9 +605,29 @@ namespace WorldGenerator
                     return true;
                 }
             }
-            #endif
+#endif
             return false;
         }
+
+        //return true if there is a slot for lightmap in the material
+        bool IsMaterialContainsLightMap(Material material)
+        {
+            #if UNITY_EDITOR
+            string slotName = "_LightMap";
+            return IsMaterialContainsMap(material, slotName);
+#endif
+            return false;
+        }
+
+        bool IsMaterialContainsBump(Material material)
+        {
+#if UNITY_EDITOR
+            string slotName = "_BumpMap";
+            return IsMaterialContainsMap(material, slotName);
+#endif
+            return false;
+        }
+
 
         void PrepareMesh(GameObject go, Dictionary<string, string> savedStandardMeshes, Dictionary<string, string> savedObjectMeshes)
         {
