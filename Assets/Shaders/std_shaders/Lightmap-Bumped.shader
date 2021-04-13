@@ -6,6 +6,7 @@ Properties {
     _MainTex ("Base (RGB)", 2D) = "white" {}
     _BumpMap ("Normalmap", 2D) = "bump" {}
     _LightMap ("Lightmap (RGB)", 2D) = "black" {}
+    _Ambient("Ambient", Color) = (0, 0, 0, 1)
 }
 
 SubShader {
@@ -22,11 +23,12 @@ sampler2D _MainTex;
 sampler2D _BumpMap;
 sampler2D _LightMap;
 fixed4 _Color;
+fixed4 _Ambient;
 void surf (Input IN, inout SurfaceOutput o)
 {
   o.Albedo = tex2D (_MainTex, IN.uv_MainTex).rgb * _Color;
   half4 lm = tex2D (_LightMap, IN.uv2_LightMap);
-  o.Emission = lm.rgb*o.Albedo.rgb;
+  o.Emission = lm.rgb*o.Albedo.rgb + _Ambient.rgb;
   o.Alpha = lm.a * _Color.a;
   o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_BumpMap));
 }

@@ -24,6 +24,11 @@ namespace WorldGenerator
                 wgExporter.PrepareScene();
             }
 
+            if (GUILayout.Button("3.5. Prepare Navmesh only"))
+            {
+                wgExporter.PrepareNavmesh();
+            }
+
             if (GUILayout.Button("4. Export Scene"))
             {
                 wgExporter.ExportScene();

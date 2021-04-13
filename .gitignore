@@ -18,4 +18,10 @@ ProjectSettings
 *.asset.meta
 *.exr
 *.exr.meta
-Assets\GeneratedAssets
+Assets/GeneratedAssets
+Builds
+Assets/Addons
+Assets/BakeryLightmaps
+Assets/BakeryLightmaps.meta
+bakery_times.log
+Assets/Addons.meta

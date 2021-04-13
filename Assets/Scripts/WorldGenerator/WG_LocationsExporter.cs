@@ -104,7 +104,8 @@ namespace WorldGenerator
         public LMShaderMode lmMode;
         public NavMeshData localNavMesh;
         public string locationRootName = "Locations";
-        public string assetLocationPath = "/GeneratedAssets/Locations/";
+        public string assetLocationXMLPath = "/GeneratedAssets/Locations_xml/";
+        public string assetLocationSOPath = "/GeneratedAssets/Locations_so/";
         public string assetMeshPath = "/GeneratedAssets/Meshes/";
         public string assetMaterialPath = "/GeneratedAssets/Materials/";
         public string assetTexturePath = "/GeneratedAssets/Textures/";
@@ -113,6 +114,7 @@ namespace WorldGenerator
         public string serverPath = "";
         public bool exportPlayerPositionsInLocations = false;
         public bool exportLightmapHDR = true;
+        public Color ldrAmbientCompensation;
         public bool clearGeneratedAsssets = true;
 
         public void ClearAssetFolders()
@@ -142,6 +144,8 @@ namespace WorldGenerator
 
         void ExportScene(Transform locationRoot)
         {
+            WG_Helper.ClearFolder(Application.dataPath + assetLocationSOPath);
+
             for (int i = 0; i < locationRoot.childCount; i++)
             {
                 Transform loc = locationRoot.GetChild(i);
@@ -149,12 +153,12 @@ namespace WorldGenerator
                 
                 if (locController != null)
                 {
-                    locController.ExportLocation("Assets" + assetLocationPath, minimapSize, minimapCamera, minimapCameraHeight, "Assets" + assetMinimapPath);
+                    locController.ExportLocation("Assets" + assetLocationXMLPath, "Assets" + assetLocationSOPath, minimapSize, minimapCamera, minimapCameraHeight, "Assets" + assetMinimapPath);
                 }
             }
 
-            //export navmesh
 #if UNITY_EDITOR
+            //export navmesh
             WG_TerrainBuilder builderComponent = builder.gameObject.GetComponent<WG_TerrainBuilder>();
             NavMeshData data = builderComponent.GetNavmeshData();
             string navmeshAssetPath = "";
@@ -192,8 +196,8 @@ namespace WorldGenerator
                         Vector3 pos = positions[i].gameObject.transform.position;
                         IntPair loc = WG_Helper.GetLocationCoordinates(pos, builderComponent.segmentSize);
                         if (loc.u >= builderComponent.segmentsMinX && loc.u <= builderComponent.segmenstMaxX && loc.v >= builderComponent.segmentsMinY && loc.v <= builderComponent.segmenstMaxY)
-                        { 
-                            globalLocation.positions.Add(new PositionData() { positionX = pos.x, positionY = pos.y, positionZ = pos.z }); 
+                        {
+                            globalLocation.positions.Add(new PositionData() { positionX = pos.x, positionY = pos.y, positionZ = pos.z });
                         }
                     }
 
@@ -203,7 +207,7 @@ namespace WorldGenerator
                         globalLocation.positions.Add(new PositionData() { positionX = 0.0f, positionY = 0.0f, positionZ = 0.0f });
                     }
                 }
-                
+
 
                 globalLocation.bounds = new LocationsBounds()
                 {
@@ -213,10 +217,10 @@ namespace WorldGenerator
                     maxV = builderComponent.segmenstMaxY
                 };
 
-                globalLocation.locationSize = new LocationSize() {value = builderComponent.segmentSize};
+                globalLocation.locationSize = new LocationSize() { value = builderComponent.segmentSize };
 
                 string globalLocationName = "global_location";
-                string globalLocationAssetPath = "Assets" + assetLocationPath + globalLocationName + ".xml";
+                string globalLocationAssetPath = "Assets" + assetLocationXMLPath + globalLocationName + ".xml";
                 globalLocation.Save(globalLocationAssetPath);
                 AssetDatabase.ImportAsset(globalLocationAssetPath, ImportAssetOptions.ForceUpdate);
                 AssetImporter.GetAtPath(globalLocationAssetPath).SetAssetBundleNameAndVariant("locations/" + globalLocationName, "");
@@ -225,6 +229,32 @@ namespace WorldGenerator
                 SavePlayerPositions(builderComponent);
                 SaveCollisionMap(serverPath);
                 SaveTowerPositions(builderComponent);
+
+                //also export locations data to SO
+                GlobalLocationDataSO globalSO = ScriptableObjectUtility.CreateAsset<GlobalLocationDataSO>("Assets" + assetLocationSOPath, globalLocationName);
+                globalSO.minU = builderComponent.segmentsMinX;
+                globalSO.maxU = builderComponent.segmenstMaxX;
+                globalSO.minV = builderComponent.segmentsMinY;
+                globalSO.maxV = builderComponent.segmenstMaxY;
+
+                globalSO.size = builderComponent.segmentSize;
+
+                globalSO.navmeshName = data.name;
+                globalSO.navmeshLink = navmeshAssetPath;
+
+                if (exportPlayerPositionsInLocations)
+                {
+                    globalSO.startPositions = new List<Vector3>();
+                    for (int pi = 0; pi < globalLocation.positions.Count; pi++)
+                    {
+                        globalSO.startPositions.Add(new Vector3(globalLocation.positions[pi].positionX, globalLocation.positions[pi].positionY, globalLocation.positions[pi].positionZ));
+                    }
+                }
+
+                EditorUtility.SetDirty(globalSO);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                AssetImporter.GetAtPath("Assets" + assetLocationSOPath + globalLocationName + ".asset").SetAssetBundleNameAndVariant("locations_so/" + globalLocationName, "");
             }
 #endif
 
@@ -351,11 +381,16 @@ namespace WorldGenerator
                         "Assets" + assetTexturePath, 
                         "Assets" + assetMinimapPath,
                         lwrpShader, stdShaders, lmMode,
-                        minimapSize, minimapCamera, minimapCameraHeight, exportLightmapHDR,
+                        minimapSize, minimapCamera, minimapCameraHeight, exportLightmapHDR, ldrAmbientCompensation,
                         savedStandardMeshes, savedObjectMeshes);
                 }
             }
 
+            PrepareNavmesh();
+        }
+
+        public void PrepareNavmesh()
+        {
             //prepare navmesh
             WG_TerrainBuilder builderComponent = builder.gameObject.GetComponent<WG_TerrainBuilder>();
             NavMeshData data = builderComponent.GetNavmeshData();
@@ -370,7 +405,8 @@ namespace WorldGenerator
         {
             //Application.dataPath = .../Assets
             WG_Helper.ClearFolder(Application.dataPath + assetMaterialPath);
-            WG_Helper.ClearFolder(Application.dataPath + assetLocationPath);
+            WG_Helper.ClearFolder(Application.dataPath + assetLocationXMLPath);
+            WG_Helper.ClearFolder(Application.dataPath + assetLocationSOPath);
             WG_Helper.ClearFolder(Application.dataPath + assetMeshPath);
             WG_Helper.ClearFolder(Application.dataPath + assetTexturePath);
             WG_Helper.ClearFolder(Application.dataPath + assetNavmeshPath);

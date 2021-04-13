@@ -553,6 +553,33 @@ namespace WorldGenerator
                 texture.GetNativeTexturePtr());
         }
 
+        public static void PrintMinMaxPixels(Color[] array)
+        {
+            float minR = float.MaxValue;
+            float minG = float.MaxValue;
+            float minB = float.MaxValue;
+            float minA = float.MaxValue;
+            float maxR = float.MinValue;
+            float maxG = float.MinValue;
+            float maxB = float.MinValue;
+            float maxA = float.MinValue;
+            for (int cIndex = 0; cIndex < array.Length; cIndex++)
+            {
+                Color c = array[cIndex];
+                minR = Mathf.Min(c.r, minR);
+                minG = Mathf.Min(c.g, minG);
+                minB = Mathf.Min(c.b, minB);
+                minA = Mathf.Min(c.a, minA);
+                maxR = Mathf.Max(c.r, maxR);
+                maxG = Mathf.Max(c.g, maxG);
+                maxB = Mathf.Max(c.b, maxB);
+                maxA = Mathf.Max(c.a, maxA);
+            }
+
+            Debug.Log("min color: " + minR.ToString() + " " + minG.ToString() + " " + minB.ToString() + " " + minA.ToString());
+            Debug.Log("max color: " + maxR.ToString() + " " + maxG.ToString() + " " + maxB.ToString() + " " + maxA.ToString());
+        }
+
         public static void SetTextureReadable(Texture2D texture, bool isReadable)
         {
             #if UNITY_EDITOR
@@ -626,13 +653,19 @@ namespace WorldGenerator
             return Mathf.Pow(value, 1.0f / gamma);
         }
 
-        public static Color ConvertColorToLightmap(Color color)
+        public static Color ConvertColorToLightmap(Color color, bool applyGamma = false)
         {
-            return color;
-            /*return new Color(WG_Helper.ApplyGammaCorrection(color.r, 0.4545f),
+            if(applyGamma)
+            {
+                return new Color(WG_Helper.ApplyGammaCorrection(color.r, 0.4545f),
                 WG_Helper.ApplyGammaCorrection(color.g, 0.4545f),
                 WG_Helper.ApplyGammaCorrection(color.b, 0.4545f),
-                color.a);*/
+                color.a);
+            }
+            else
+            {
+                return color;
+            }
         }
 
         public static Color[] CreateArray(Color value, int length)
@@ -663,6 +696,7 @@ namespace WorldGenerator
                 else
                 {
                     toReturn[i] = WG_Helper.ConvertColorToLightmap(array[i]);
+                    //toReturn[i] = WG_Helper.ConvertColorToLightmap(new Color(array[i].r * array[i].a, array[i].g * array[i].a, array[i].b * array[i].a, 1.0f), true);
                 }
             }
 

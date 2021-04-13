@@ -10,6 +10,7 @@ Properties {
     _EmissionColor("Emission Color", Color) = (1.0, 1.0, 1.0, 1)
     _Exposure("Exposure", Range(0.001, 10)) = 0.1
     _LightMap("Lightmap (RGB)", 2D) = "black" {}
+    _Ambient("Ambient", Color) = (0, 0, 0, 1)
 }
 
 CGINCLUDE
@@ -20,6 +21,7 @@ fixed4 _Color;
 fixed4 _EmissionColor;
 half _Shininess;
 half _Exposure;
+fixed4 _Ambient;
 
 struct Input {
     float2 uv_BumpMap;
@@ -31,7 +33,7 @@ void surf (Input IN, inout SurfaceOutput o) {
     fixed4 em = tex2D(_EmissionMap, IN.uv_EmissionMap);
     half4 lm = tex2D(_LightMap, IN.uv2_LightMap);
     o.Albedo = _Color.rgb + em.rgb * _EmissionColor.rgb * _Exposure;
-    o.Emission = lm.rgb * o.Albedo.rgb;
+    o.Emission = lm.rgb * o.Albedo.rgb + _Ambient.rgb;
     o.Gloss = _SpecColor;
     o.Specular = _Shininess;
     o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_BumpMap));

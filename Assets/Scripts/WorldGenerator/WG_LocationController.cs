@@ -158,21 +158,29 @@ namespace WorldGenerator
         private Shader[] stdShaders;
         private LMShaderMode lmMode;
         private bool isLightmapHDR;
+        private Color ldrAmbient;
 
-        public void ExportLocation(string locationAssetPath, int minimapSize, Camera minimapCamera, float minimapCameraHeight, string _minimapAssetFolder)
+        public void ExportLocation(string locationXmlAssetPath, string locationSoAssetPath, int minimapSize, Camera minimapCamera, float minimapCameraHeight, string _minimapAssetFolder)
         {
+            //we export as old xml assets, and new so-based assets with the same data
             #if UNITY_EDITOR
             materialLinks = new Dictionary<int, NameLinkPath>();
             textureLinks = new Dictionary<int, NameLinkPath>();
             meshLinks = new Dictionary<int, NameLinkPath>();
             shaderLinks = new Dictionary<int, NameLinkPath>();
+            string locationName = "location_" + u.ToString() + "_" + v.ToString();
+            string assetPath = locationXmlAssetPath + locationName + ".xml";
+
+            //create so
+            LocationDataSO locationSO = ScriptableObjectUtility.CreateAsset<LocationDataSO>(locationSoAssetPath, locationName);
+            locationSO.items = new List<ItemSO>();
 
             LocationData location = new LocationData
             {
                 transform = new TransformData(gameObject.transform), items = new List<ItemData>()
             };
 
-            ExportOneObject(gameObject, location.items);
+            ExportOneObject(gameObject, location.items, locationSO.items);
             
             string minimapName = "minimap_" + u.ToString() + "_" + v.ToString();
             string minimapBundlePath = "minimaps/" + minimapName;
@@ -184,21 +192,31 @@ namespace WorldGenerator
             MinimapData mData = new MinimapData {link = minimapBundlePath, name = locationMinimap.name};
             location.minimap = mData;
 
-            string locationName = "location_" + u.ToString() + "_" + v.ToString();
-            string assetPath = locationAssetPath + locationName + ".xml";
+            //also to so
+            locationSO.minimapName = locationMinimap.name;
+            locationSO.minimapLink = minimapBundlePath;
+
+            //and transform
+            locationSO.position = gameObject.transform.position;
+            locationSO.rotation = gameObject.transform.rotation;
+            locationSO.scale = gameObject.transform.lossyScale;
+
+            //save so
+            EditorUtility.SetDirty(locationSO);
+
             location.Save(assetPath);
             AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
 
             //add location asset to the bundle
             AssetImporter.GetAtPath(assetPath).SetAssetBundleNameAndVariant("locations/" + locationName, "");
-            
+            AssetImporter.GetAtPath(locationSoAssetPath + locationName + ".asset").SetAssetBundleNameAndVariant("locations_so/" + locationName, "");
             AssetImporter.GetAtPath(minimapAssetPath).SetAssetBundleNameAndVariant(minimapBundlePath, "");
 
             #endif
         }
 
 #if UNITY_EDITOR
-        void ExportOneObject(GameObject obj, List<ItemData> items)
+        void ExportOneObject(GameObject obj, List<ItemData> items, List<ItemSO> itemsSO)
         {
             int childCount = obj.transform.childCount;
             for (int i = 0; i < childCount; i++)
@@ -213,7 +231,7 @@ namespace WorldGenerator
                     if (itemChild > 0)
                     {
                         newItem.items = new List<ItemData>();
-                        ExportOneObject(go, newItem.items);
+                        ExportOneObject(go, newItem.items, itemsSO);
                     }
                     MeshRenderer objRender = go.GetComponent<MeshRenderer>();
                     MeshFilter objMeshFilter = go.GetComponent<MeshFilter>();
@@ -232,6 +250,19 @@ namespace WorldGenerator
                     }
 
                     items.Add(newItem);
+                    if(objRender != null && objMeshFilter != null && newItem.meshData != null)
+                    {
+                        itemsSO.Add(new ItemSO()
+                        {
+                            position = child.position,
+                            rotation = child.rotation,
+                            scale = child.lossyScale,
+                            name = go.name,
+                            meshName = newItem.meshData.meshName, meshLink = newItem.meshData.meshLink,
+                            materialName = newItem.meshData.materialName,
+                            materialLink = newItem.meshData.materialLink
+                        });
+                    }
                 }
             }
         }
@@ -335,6 +366,7 @@ namespace WorldGenerator
                                     Camera minimapCamera, 
                                     float minimapCameraHeight, 
                                     bool _isLightmapHDR,
+                                    Color _ldrAmbient,
                                     Dictionary<string, string> savedStandardMeshes, 
                                     Dictionary<string, string> savedObjectMeshes)
         {
@@ -347,6 +379,7 @@ namespace WorldGenerator
             stdShaders = _stdShaders;
             lmMode = _lmMode;
             isLightmapHDR = _isLightmapHDR;
+            ldrAmbient = _ldrAmbient;
             PrepareObject(gameObject.transform, savedStandardMeshes, savedObjectMeshes);
             CreateMinimap(minimapSize, minimapCamera, minimapCameraHeight);
             #endif
@@ -447,7 +480,11 @@ namespace WorldGenerator
                         
                         //fill the main rect
                         Color[] lmColorsRaw = lmTexture.GetPixels(mapStartX, mapStartY, mapWidth, mapHeight);
+                        //WG_Helper.PrintMinMaxPixels(lmColorsRaw);
+
                         Color[] lmColors = WG_Helper.ConverPixelsToLightMap(lmColorsRaw);
+                        //WG_Helper.PrintMinMaxPixels(lmColors);
+                        //Debug.Log("main rect: " + (mapStartX - startX).ToString() + " " + (mapStartY - startY).ToString() + " " + mapWidth.ToString() + " " + mapHeight.ToString());
                         newTexture.SetPixels(mapStartX - startX, mapStartY - startY, mapWidth, mapHeight, isLightmapHDR ? lmColors : lmColorsRaw);
                         
                         //next fill left area (if we need it)
@@ -494,10 +531,23 @@ namespace WorldGenerator
                         newTexture.SetPixels(0, 0, mapStartX - startX, mapStartY - startY, leftBottomColors);
                         newTexture.SetPixels(0, mapEndY, mapStartX - startX,  startY + height - mapEndY, leftTopColors);
                         //Debug.Log(rightBottomColors.Length.ToString() + " " + (startX + width - mapEndX).ToString() + " " + (mapStartY - startY).ToString());
-                        newTexture.SetPixels(mapEndX, 0, startX + width - mapEndX, mapStartY - startY, rightBottomColors);
+                        try
+                        {
+                            newTexture.SetPixels(mapEndX, 0, startX + width - mapEndX, mapStartY - startY, rightBottomColors);
+                        }
+                        catch
+                        {
+                            Debug.Log(rightBottomColors.Length.ToString() + " " + (startX + width - mapEndX).ToString() + " " + (mapStartY - startY).ToString());
+                        }
                         newTexture.SetPixels(mapEndX, mapEndY,  startX + width - mapEndX,  startY + height - mapEndY, rightTopColors);
 
                         newTexture.Apply();
+
+                        //Debug.Log("isLightmapHDR=" + isLightmapHDR.ToString());
+                        //Debug.Log("original pixel: " + lmTexture.GetPixel(mapStartX + width / 3, mapStartY + height / 3).ToString() + " " 
+                            //+ lmTexture.GetPixel(mapStartX + 2*width / 3, mapStartY + 2*height / 3).ToString());
+                        //Debug.Log("saved pixel: " + newTexture.GetPixel(width / 3, height / 3).ToString() + " " + newTexture.GetPixel(2*width / 3, 2*height / 3).ToString());
+
                         lmTextureAssetPath = SaveTextureAsset(newTexture, isLightmapHDR);
                         WG_Helper.SetTextureLightmap(lmTextureAssetPath, isLightmapHDR);
                         reAssignMaterial = true;
@@ -557,6 +607,11 @@ namespace WorldGenerator
                             newMaterial.enableInstancing = originalMaterial.enableInstancing;
                             //finally assign lightMap texture
                             newMaterial.SetTexture("_LightMap", AssetDatabase.LoadAssetAtPath<Texture2D>(lmTextureAssetPath));
+                            //set amibient, if we need it
+                            if(!isLightmapHDR)
+                            {
+                                newMaterial.SetColor("_Ambient", ldrAmbient);
+                            }
                             //enable all kewords
                             string[] originalKeyWords = originalMaterial.shaderKeywords;
                             for (int s = 0; s < originalKeyWords.Length; s++)
@@ -717,6 +772,8 @@ namespace WorldGenerator
             string filePath = Application.dataPath + "/" + dataPath;
             if (isHdr)
             {
+                //Debug.Log("Save exr " + filePath);
+                //Debug.Log("center pixel: " + texture.GetPixel(texture.width / 2, texture.height / 2).ToString());
                 byte[] _bytes = texture.EncodeToEXR();
                 File.WriteAllBytes(filePath, _bytes);
                 AssetDatabase.ImportAsset("Assets/" + dataPath, ImportAssetOptions.ForceUpdate);

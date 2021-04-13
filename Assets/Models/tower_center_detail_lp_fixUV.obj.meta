@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: ecba8416112ef894eabbea63c3b59dc4
 ModelImporter:
-  serializedVersion: 25
+  serializedVersion: 26
   internalIDToNameTable: []
   externalObjects: {}
   materials:
@@ -29,7 +29,8 @@ ModelImporter:
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
-    extraUserProperties: []
+    extraUserProperties:
+    - '#BAKERY{"meshName":["default"],"padding":[54],"unwrapper":[0]}'
     clipAnimations: []
     isReadable: 0
   meshes:
@@ -38,6 +39,7 @@ ModelImporter:
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
     importVisibility: 0
     importBlendShapes: 0
     importCameras: 0
