@@ -115,6 +115,7 @@ namespace WorldGenerator
         public bool exportPlayerPositionsInLocations = false;
         public bool exportLightmapHDR = true;
         public Color ldrAmbientCompensation;
+        public float ldrLightmapMultiplier;
         public bool clearGeneratedAsssets = true;
 
         public void ClearAssetFolders()
@@ -190,7 +191,7 @@ namespace WorldGenerator
                 if (exportPlayerPositionsInLocations)
                 {
                     globalLocation.positions = new List<PositionData>();
-                    WG_Position[] positions = FindObjectsOfType<WG_Position>();
+                    WG_Position[] positions = WG_Helper.FindObjectsOfTypeAll<WG_Position>().ToArray();// FindObjectsOfType<WG_Position>();
                     for (int i = 0; i < positions.Length; i++)
                     {
                         Vector3 pos = positions[i].gameObject.transform.position;
@@ -265,7 +266,7 @@ namespace WorldGenerator
             NumberFormatInfo nfi = new NumberFormatInfo();
             nfi.NumberDecimalSeparator = ".";
 
-            WG_Position[] positions = FindObjectsOfType<WG_Position>();
+            WG_Position[] positions = WG_Helper.FindObjectsOfTypeAll<WG_Position>().ToArray();// FindObjectsOfType<WG_Position>();
             string path = serverPath + "PlayerStartPoints.txt";
 
             using (StreamWriter sw = File.CreateText(path))
@@ -314,7 +315,7 @@ namespace WorldGenerator
             NumberFormatInfo nfi = new NumberFormatInfo();
             nfi.NumberDecimalSeparator = ".";
 
-            WG_Tower[] positions = FindObjectsOfType<WG_Tower>();
+            WG_Tower[] positions = WG_Helper.FindObjectsOfTypeAll<WG_Tower>().ToArray();// FindObjectsOfType<WG_Tower>();
             string path = serverPath + "Towers.txt";
 
             using (StreamWriter sw = File.CreateText(path))
@@ -381,7 +382,7 @@ namespace WorldGenerator
                         "Assets" + assetTexturePath, 
                         "Assets" + assetMinimapPath,
                         lwrpShader, stdShaders, lmMode,
-                        minimapSize, minimapCamera, minimapCameraHeight, exportLightmapHDR, ldrAmbientCompensation,
+                        minimapSize, minimapCamera, minimapCameraHeight, exportLightmapHDR, ldrAmbientCompensation, ldrLightmapMultiplier,
                         savedStandardMeshes, savedObjectMeshes);
                 }
             }

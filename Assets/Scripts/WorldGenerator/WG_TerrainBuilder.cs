@@ -2,6 +2,9 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.AI;
+#if UNITY_EDITOR
+using UnityEngine.SceneManagement;
+#endif
 
 namespace WorldGenerator
 {
@@ -109,10 +112,24 @@ namespace WorldGenerator
         public void BuildMesh()
         {
 #if UNITY_EDITOR
+            //delete all combined objects
+            WG_Tag_CombineMesh[] combs = FindObjectsOfType<WG_Tag_CombineMesh>();
+            for(int i = 0; i < combs.Length; i++)
+            {
+                DestroyImmediate(combs[i].gameObject);
+            }
+            
             //find all objects with tower or position tag
-            WG_PositionBase[] objs = FindObjectsOfType<WG_PositionBase>();
+            WG_PositionBase[] objs = WG_Helper.FindObjectsOfTypeAll<WG_PositionBase>().ToArray();
             for(int i = 0; i < objs.Length; i++)
             {
+                WG_Tag_MasterPrefab tagMaster = objs[i].gameObject.GetComponent<WG_Tag_MasterPrefab>();
+                if(tagMaster != null)
+                {
+                    objs[i].gameObject.SetActive(true);
+                    DestroyImmediate(tagMaster);
+                }
+
                 Transform tfm = objs[i].transform;
                 IntPair loc = WG_Helper.GetLocationCoordinates(tfm.position, segmentSize);
                 if(loc.u >= segmentsMinX && loc.u <= segmenstMaxX && loc.v >= segmentsMinY && loc.v <= segmenstMaxY)
@@ -151,7 +168,7 @@ namespace WorldGenerator
                         //check is this object contains location controller
                         WG_LocationController locController = go.GetComponent<WG_LocationController>();
                         if (locController != null)
-                        {//this is location root object, destoy it
+                        {//this is location root object, desrtoy it
                             DestroyImmediate(go);
                         }
                         else
@@ -370,6 +387,198 @@ namespace WorldGenerator
                 }
             }
             #endif
+        }
+
+        void CombineLocation(GameObject locationRoot)
+        {
+#if UNITY_EDITOR
+            //we should collect objects with the same material
+            Dictionary<int, List<CombinerDataContainer>> materialMap = new Dictionary<int, List<CombinerDataContainer>>();
+            Dictionary<int, Material> materials = new Dictionary<int, Material>();
+
+            Transform[] allTransforms = locationRoot.transform.GetComponentsInChildren<Transform>();
+            for(int i = 0; i < allTransforms.Length; i++)
+            {
+                GameObject go = allTransforms[i].gameObject;
+                WG_LocationController locController = go.GetComponent<WG_LocationController>();
+                if(locController == null)
+                {
+                    //Debug.Log(allTransforms[i].gameObject.name);
+                    GameObject prefab = PrefabUtility.GetOutermostPrefabInstanceRoot(go);
+                    if(prefab != null && prefab == go)  // ignore individual generated objects
+                    {//this object is prefab, so, dive to it subobjects
+                        //use this code only when we consider the root prefab object and ignore for all it subobjects
+                        GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(prefab);
+                        Transform[] sourceSubtfms = source.transform.GetComponentsInChildren<Transform>();
+                        Transform goTfm = go.transform;
+                        if (sourceSubtfms.Length == 1)
+                        {
+                            //prefab contains only one object (it builded by proBuilder)
+                            //use changed mesh filter of the original scene object
+                            MeshFilter mFilter = go.GetComponent<MeshFilter>();
+                            MeshRenderer mRenderer = go.GetComponent<MeshRenderer>();
+                            if(mFilter != null && mRenderer != null)
+                            {
+                                Material m = mRenderer.sharedMaterial;
+                                int mId = m.GetInstanceID();
+                                if (materialMap.ContainsKey(mId))
+                                {
+                                    materialMap[mId].Add(new CombinerDataContainer() { go = go, worldMatrix = go.transform.localToWorldMatrix /*toCenterTfm = goTfm*/ });
+                                }
+                                else
+                                {
+                                    materialMap.Add(mId, new List<CombinerDataContainer>() { new CombinerDataContainer() { go = go, worldMatrix = go.transform.localToWorldMatrix /*toCenterTfm = goTfm */} });
+                                    materials.Add(mId, m);
+                                }
+                            }
+                        }
+                        else
+                        {//for large prefab we use master prefab objects
+                            for (int j = 0; j < sourceSubtfms.Length; j++)
+                            {
+                                GameObject subObj = sourceSubtfms[j].gameObject;
+                                MeshFilter mFilter = subObj.GetComponent<MeshFilter>();
+                                MeshRenderer mRenderer = subObj.GetComponent<MeshRenderer>();
+                                if (mFilter != null && mRenderer != null && mFilter.sharedMesh != null)  // ignore subobject, if the master prefab does not contains the mesh
+                                {//this object contains mesh
+                                    Material m = mRenderer.sharedMaterial;
+                                    int mId = m.GetInstanceID();
+                                    if (materialMap.ContainsKey(mId))
+                                    {
+                                        materialMap[mId].Add(new CombinerDataContainer() { go = subObj, worldMatrix = go.transform.localToWorldMatrix * subObj.transform.localToWorldMatrix /*toCenterTfm = goTfm, localTfm = subObj.transform*/});
+                                    }
+                                    else
+                                    {
+                                        materialMap.Add(mId, new List<CombinerDataContainer>() { new CombinerDataContainer() { go = subObj, worldMatrix = go.transform.localToWorldMatrix * subObj.transform.localToWorldMatrix /*toCenterTfm = goTfm, localTfm = subObj.transform*/ } });
+                                        materials.Add(mId, m);
+                                    }
+                                }
+                            }
+                        }
+
+                        //mark original objects and disable it
+                        go.AddComponent<WG_Tag_MasterPrefab>();
+                        go.SetActive(false);
+                    }
+                }
+            }
+
+            //builded material map
+            Matrix4x4 rootMatrix = locationRoot.transform.worldToLocalMatrix;
+            foreach (int mId in materialMap.Keys)
+            {
+                //Debug.Log(mId.ToString() + ": " + materials[mId].name);
+                //we should create new mesh for all objects with this material
+                List<Vector3> vertices = new List<Vector3>();
+                List<int> triangles = new List<int>();
+                List<Vector2> uvs = new List<Vector2>();
+                List<Vector3> normals = new List<Vector3>();
+                List<Vector4> tangents = new List<Vector4>();
+
+                int indexShift = 0;
+
+                for(int i = 0; i < materialMap[mId].Count; i++)
+                {
+                    GameObject go = materialMap[mId][i].go;  // here we should use transform relative to the master prefab (we should store it separatly)
+                    //Debug.Log("\tobject " + go.name);
+                    //Transform tfm = materialMap[mId][i].toCenterTfm;
+                    //Matrix4x4 globalMatrix = tfm.localToWorldMatrix;
+
+                    //Matrix4x4   = rootMatrix * globalMatrix;
+                    Matrix4x4 changeMatrix = rootMatrix * materialMap[mId][i].worldMatrix;
+                    //if(materialMap[mId][i].localTfm != null)
+                    //{
+                    //changeMatrix = changeMatrix * materialMap[mId][i].localTfm.localToWorldMatrix;
+                    //}
+
+                    MeshFilter mFilter = go.GetComponent<MeshFilter>();
+                    Mesh mesh = mFilter.sharedMesh;
+                    Vector3[] vs = mesh.vertices;
+                    for (int j = 0; j < vs.Length; j++)
+                    {
+                        vertices.Add(changeMatrix.MultiplyPoint(vs[j]));
+                    }
+                    //Debug.Log("\t\tvetices: " + vs.Length.ToString());
+                    int[] trs = mesh.triangles;
+                    for (int j = 0; j < trs.Length; j++)
+                    {
+                        triangles.Add(trs[j] + indexShift);
+                    }
+
+                    Vector2[] mvs = mesh.uv;
+                    for(int j = 0; j < vs.Length; j++)
+                    {
+                        uvs.Add(mvs[j]);
+                    }
+
+                    Vector3[] nms = mesh.normals;
+                    for(int j = 0; j < nms.Length; j++)
+                    {
+                        normals.Add(changeMatrix.MultiplyVector(nms[j]).normalized);
+                    }
+                    Vector4[] tgs = mesh.tangents;
+                    for(int j = 0; j < tgs.Length; j++)
+                    {
+                        Vector4 t = changeMatrix.MultiplyVector(tgs[j]);
+                        t.w = tgs[j].w;
+                        tangents.Add(t);
+                    }
+                    //Debug.Log("\t\tnormals: " + nms.Length.ToString());
+
+                    indexShift += vs.Length;
+                    
+                }
+
+                Mesh combinedMesh = new Mesh();
+                combinedMesh.vertices = vertices.ToArray();
+                combinedMesh.triangles = triangles.ToArray();
+                combinedMesh.uv = uvs.ToArray();
+                combinedMesh.normals = normals.ToArray();
+                combinedMesh.tangents = tangents.ToArray();
+                //Debug.Log("\tset vertices: " + vertices.Count.ToString() + ", normals: " + normals.Count.ToString());
+
+                Unwrapping.GenerateSecondaryUVSet(combinedMesh);
+
+                //create game object
+                GameObject combinedGO = new GameObject("combined_" + materials[mId].name) { isStatic = true };
+                MeshFilter cmf = combinedGO.AddComponent<MeshFilter>();
+                cmf.mesh = combinedMesh;
+
+                combinedGO.transform.SetParent(locationRoot.transform, false);
+                MeshRenderer cmr = combinedGO.AddComponent<MeshRenderer>();
+                cmr.material = materials[mId];
+
+                combinedGO.AddComponent<WG_Tag_CombineMesh>();
+                //StaticEditorFlags flags = StaticEditorFlags.NavigationStatic | StaticEditorFlags.ContributeGI;
+                //GameObjectUtility.SetStaticEditorFlags(combinedGO, flags);
+            }
+#endif
+        }
+
+        public void CombineCommand()
+        {
+#if UNITY_EDITOR
+            /*for(int i = 0; i < gameObject.transform.childCount; i++)
+            {
+                GameObject go = transform.GetChild(i).gameObject;
+                if(go.name == "Locations")
+                {
+                    //this is root location object
+                    for(int l = 0; l < go.transform.childCount; l++)
+                    {
+                        GameObject locGO = go.transform.GetChild(l).gameObject;
+                        //next we should process this game object
+                        CombineLocation(locGO);
+                    }
+                }
+            }*/
+
+            WG_LocationController[] locs = gameObject.GetComponentsInChildren<WG_LocationController>();
+            for(int i = 0; i < locs.Length; i++)
+            {
+                CombineLocation(locs[i].gameObject);
+            }
+#endif
         }
     }
 }

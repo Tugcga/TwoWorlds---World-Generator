@@ -28,6 +28,11 @@ namespace WorldGenerator
             {
                 wgBuilder.BuildMesh();
             }
+
+            if (GUILayout.Button("1.5. Combine"))
+            {
+                wgBuilder.CombineCommand();
+            }
         }
     }
 }

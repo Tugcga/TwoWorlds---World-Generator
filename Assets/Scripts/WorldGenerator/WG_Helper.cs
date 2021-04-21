@@ -7,9 +7,20 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
+#if UNITY_EDITOR
+using UnityEngine.SceneManagement;
+#endif
 
 namespace WorldGenerator
 {
+    public struct CombinerDataContainer
+    {
+        public GameObject go;
+        //public Transform toCenterTfm;
+        //public Transform localTfm;
+        public Matrix4x4 worldMatrix;
+    }
+
     public struct BoundaryEdge
     {
         public int index;
@@ -605,7 +616,9 @@ namespace WorldGenerator
             {
                 if (isHDR)
                 {
-                    importer.textureType = TextureImporterType.Lightmap;
+                    //importer.textureType = TextureImporterType.Lightmap;
+                    importer.textureType = TextureImporterType.Default;
+                    importer.sRGBTexture = false;
                 }
                 else
                 {
@@ -616,7 +629,10 @@ namespace WorldGenerator
                 importer.wrapMode = TextureWrapMode.Clamp;
                 
                 importer.npotScale = TextureImporterNPOTScale.ToNearest;
-                importer.textureCompression = TextureImporterCompression.CompressedHQ;
+                importer.textureCompression = TextureImporterCompression.CompressedLQ;
+                //importer.textureCompression = TextureImporterCompression.Uncompressed;
+                //importer.isReadable = true;
+
 
                 EditorUtility.SetDirty(importer);
                 importer.SaveAndReimport();
@@ -695,7 +711,8 @@ namespace WorldGenerator
                 }
                 else
                 {
-                    toReturn[i] = WG_Helper.ConvertColorToLightmap(array[i]);
+                    //toReturn[i] = WG_Helper.ConvertColorToLightmap(array[i]);
+                    toReturn[i] = array[i].linear;
                     //toReturn[i] = WG_Helper.ConvertColorToLightmap(new Color(array[i].r * array[i].a, array[i].g * array[i].a, array[i].b * array[i].a, 1.0f), true);
                 }
             }
@@ -1149,6 +1166,27 @@ namespace WorldGenerator
                 toReturn.Add(newEdge);
             }
             return toReturn;
+        }
+
+        public static List<T> FindObjectsOfTypeAll<T>()
+        {
+            List<T> results = new List<T>();
+#if UNITY_EDITOR
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var s = SceneManager.GetSceneAt(i);
+                if (s.isLoaded)
+                {
+                    var allGameObjects = s.GetRootGameObjects();
+                    for (int j = 0; j < allGameObjects.Length; j++)
+                    {
+                        var go = allGameObjects[j];
+                        results.AddRange(go.GetComponentsInChildren<T>(true));
+                    }
+                }
+            }
+#endif
+            return results;
         }
     }
 }

@@ -1,14 +1,13 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
-using System.IO;
+#endif
 
 namespace WorldGenerator
 {
 	public static class ScriptableObjectUtility
 	{
-		/// <summary>
-		//	This makes it easy to create, name and place unique new ScriptableObject asset files.
-		/// </summary>
+#if UNITY_EDITOR
 		public static T CreateAsset<T>(string path, string assetName) where T : ScriptableObject
 		{
 			T asset = ScriptableObject.CreateInstance<T>();
@@ -19,11 +18,9 @@ namespace WorldGenerator
 
 			AssetDatabase.SaveAssets();
 			AssetDatabase.Refresh();
-			//EditorUtility.FocusProjectWindow();
-			//Selection.activeObject = asset;
 
 			return asset;
 		}
+#endif
 	}
-
 }

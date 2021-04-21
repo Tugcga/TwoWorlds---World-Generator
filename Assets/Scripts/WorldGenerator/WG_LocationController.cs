@@ -159,6 +159,7 @@ namespace WorldGenerator
         private LMShaderMode lmMode;
         private bool isLightmapHDR;
         private Color ldrAmbient;
+        private float ldrLightmapMultiplier;
 
         public void ExportLocation(string locationXmlAssetPath, string locationSoAssetPath, int minimapSize, Camera minimapCamera, float minimapCameraHeight, string _minimapAssetFolder)
         {
@@ -367,6 +368,7 @@ namespace WorldGenerator
                                     float minimapCameraHeight, 
                                     bool _isLightmapHDR,
                                     Color _ldrAmbient,
+                                    float _ldrLightmapMultiplier,
                                     Dictionary<string, string> savedStandardMeshes, 
                                     Dictionary<string, string> savedObjectMeshes)
         {
@@ -380,6 +382,7 @@ namespace WorldGenerator
             lmMode = _lmMode;
             isLightmapHDR = _isLightmapHDR;
             ldrAmbient = _ldrAmbient;
+            ldrLightmapMultiplier = _ldrLightmapMultiplier;
             PrepareObject(gameObject.transform, savedStandardMeshes, savedObjectMeshes);
             CreateMinimap(minimapSize, minimapCamera, minimapCameraHeight);
             #endif
@@ -610,7 +613,8 @@ namespace WorldGenerator
                             //set amibient, if we need it
                             if(!isLightmapHDR)
                             {
-                                newMaterial.SetColor("_Ambient", ldrAmbient);
+                                //--newMaterial.SetColor("_Ambient", ldrAmbient);  // <-- does not used in WebGL mode
+                                newMaterial.SetFloat("_Multiplier", ldrLightmapMultiplier);
                             }
                             //enable all kewords
                             string[] originalKeyWords = originalMaterial.shaderKeywords;
